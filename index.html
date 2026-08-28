@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil do Pet | Resgate</title>
+    <!-- Leitor da Planilha -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    
+    <style>
+        /* O Design Estilo App Verde */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #3b82f6; /* Fundo azul por fora do celular (opcional em telas grandes) */
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            background-color: #0e8243; /* O verde idêntico ao da imagem */
+            width: 100%;
+            max-width: 400px;
+            min-height: 100vh;
+            padding: 40px 25px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            display: none; /* Fica escondido até carregar os dados */
+        }
+
+        .pet-photo {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #ffffff;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .pet-name {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-text {
+            font-size: 15px;
+            line-height: 1.4;
+            font-weight: 500;
+            margin-bottom: 30px;
+            padding: 0 10px;
+        }
+
+        /* Estilo dos Botões e Ficha */
+        .info-block {
+            background-color: #ffffff;
+            color: #333333;
+            width: 100%;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            text-align: left;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-contato {
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-contato:active {
+            transform: scale(0.98);
+        }
+
+        .icon {
+            font-size: 18px;
+            margin-right: 12px;
+        }
+
+        .ficha-box {
+            display: block;
+            margin-top: 20px;
+        }
+
+        .ficha-box strong {
+            display: block;
+            color: #0e8243;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eeeeee;
+            padding-bottom: 5px;
+        }
+
+        .ficha-content {
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.5;
+            color: #444444;
+        }
+
+        /* Tela de carregamento */
+        #loading {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">Conectando ao banco de dados...</div>
+
+    <div class="app-container" id="content">
+        <img id="html-foto" src="" alt="Foto do Pet" class="pet-photo">
+        <h1 id="html-nome" class="pet-name">Nome</h1>
+        
+        <p class="alert-text">Olá! Estou perdido!! Por favor entre em contato com meus pais para que eles possam me buscar :)</p>
+
+        <!-- Botão Tutor 1 -->
+        <a id="btn-tutor1" href="#" class="info-block btn-contato">
+            <span class="icon">📞</span> <span id="html-nome-tutor1">Tutor 1</span>
+        </a>
+
+        <!-- Botão Tutor 2 (Nasce escondido) -->
+        <a id="btn-tutor2" href="#" class="info-block btn-contato" style="display: none;">
+            <span class="icon">📞</span> <span id="html-nome-tutor2">Tutor 2</span>
+        </a>
+
+        <!-- Caixa da Ficha Médica -->
+        <div class="info-block ficha-box">
+            <strong>📋 Ficha Médica e Informações</strong>
+            <div id="html-ficha" class="ficha-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // COLE O LINK DA SUA PLANILHA CSV AQUI DENTRO DAS ASPAS
+        const linkCSV = "COLE_O_LINK_AQUI"; 
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const nomeBuscado = urlParams.get('pet');
+
+        if(nomeBuscado) {
+            Papa.parse(linkCSV, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const dados = results.data;
+                    let petEncontrado = false;
+
+                    for(let i = 0; i < dados.length; i++) {
+                        if(dados[i].Nome && dados[i].Nome.toLowerCase() === nomeBuscado.toLowerCase()) {
+                            
+                            // 1. Dados Básicos
+                            document.getElementById('html-nome').innerText = dados[i].Nome;
+                            document.getElementById('html-foto').src = dados[i].Foto;
+                            
+                            // 2. Ficha (Transforma os "Enters" da planilha em quebras de linha visíveis)
+                            document.getElementById('html-ficha').innerHTML = dados[i].Ficha.replace(/\n/g, '<br>');
+
+                            // 3. Botão Tutor 1
+                            document.getElementById('html-nome-tutor1').innerText = dados[i].Tutor1;
+                            document.getElementById('btn-tutor1').href = "https://wa.me/" + dados[i].WhatsApp1 + "?text=Oi!%20Acho%20que%20encontrei%20o(a)%20" + dados[i].Nome;
+
+                            // 4. A MÁGICA: Botão Tutor 2 (Só aparece se tiver nome e número na planilha)
+                            if(dados[i].Tutor2 && dados[i].Tutor2.trim() !== "" && dados[i].WhatsApp2) {
+                                document.getElementById('html-nome-tutor2').innerText = dados[i].Tutor2;
+                                document.getElementById('btn-tutor2').href = "https://wa.me/" + dados[i].WhatsApp2 + "?text=Oi!%20Acho%20que%20encontrei%20o(a)%20" + dados[i].Nome;
+                                document.getElementById('btn-tutor2').style.display = 'flex';
+                            }
+
+                            petEncontrado = true;
+                            break;
+                        }
+                    }
+
+                    document.getElementById('loading').style.display = 'none';
+                    if(petEncontrado) {
+                        document.getElementById('content').style.display = 'block';
+                    } else {
+                        document.getElementById('loading').innerText = "Ops! Pet não encontrado.";
+                        document.getElementById('loading').style.display = 'block';
+                    }
+                }
+            });
+        } else {
+            document.getElementById('loading').innerText = "Nenhum pet informado no link.";
+        }
+    </script>
+</body>
+</html>
